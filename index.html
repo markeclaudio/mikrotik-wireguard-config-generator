@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css">
+  <title>Wireguard Config Generator</title>
+</head>
+
+<body>
+  <section class="section">
+    <div id="app" class="container">
+      <div class="columns">
+        <div class="column">
+          <h2 class="title">Quick and Dirty DRM WG Config Generator</h2>
+          <div class="buttons">
+            <button class="button is-primary" @click="updateclients">Generate</button>
+            <button class="button is-warning" v-if="!dlbuttonshidden" @click="downloadclients">Download Client Config</button>
+            <button class="button is-info" v-if="!dlbuttonshidden" @click="downloadqrcodes">Download Client QR Codes</button>
+          </div>
+          <article class="panel">
+            <table class="table">
+              <tr>
+                <td>Server:<br> <input v-model="server"></td>
+                <td>Port:<br> <input v-model="port"></td>
+                <td>Interface Name:<br> <input v-model="interfacename"></td>
+              </tr>
+              <tr>
+                <td>Net:<br> <input v-model="network" size="8"> </td>
+                <td>1stIP:<br> <input v-model="startip" size="1"></td>
+                <td>Clients:<br> <input v-model="clientcount" size="3"></td>
+              </tr>
+              <tr>
+                <td>Allowed Net(s):<br> <input v-model="allowednets" size="40"></td>
+              </tr>
+              <tr>
+                <td colspan="3">ServerPrivateKey:<br> <input v-model="serverkeys.privateKey" size="50"></td>
+              </tr>
+              <tr>
+                <td colspan="3">ServerPublicKey:<br> <input v-model="serverkeys.publicKey" size="50"></td>
+              </tr>
+            </table>
+          </article>
+          <article class="panel">
+            <p class="panel-heading">Server config {{ server }}:{{ port }}</p>
+            <p class="panel-block" >
+              <code style="font-size:small;"><span @click="select">
+                /interface wireguard<br>
+                add listen-port={{ port }} mtu=1420 name={{interfacename}} private-key="{{ serverkeys.privateKey }}"<br><br>
+
+                /ip firewall filter<br>
+                add action=accept chain=input comment="Allow Wireguard from All" dst-port={{port}} protocol=udp<br><br>
+
+                /ip address <br>
+                add address={{ network }}.1/24 comment="Wireguard Interface" interface={{ interfacename }} network={{ network }}.0<br><br>
+
+                /interface wireguard peers<br>
+                <span v-for="line in oldconfig">{{ line }}<br></span>
+                  <span v-for="(value, client) in clients"><br>
+                  add allowed-address={{ network }}.{{ client }}/32 comment="{{ value.name }}" endpoint-address={{ network }}.{{ client }} interface={{interfacename}} public-key="{{ value.publicKey }}"
+                  </span>
+                </span>
+              </code>
+            </p>
+          </article>
+        </div>
+        <div class="column">
+          <article class="panel">
+            <p class="panel-heading">Client configs (first ip: {{network}}.{{startip}}, count: {{ clientcount }})</p>
+            <div class="panel-block" v-for="(value, client) in clients">
+              <canvas :id="'canvas'+client"></canvas>
+              <div>
+                <input v-model="value.name">
+                <code class="panel-block clients-code" style="font-size:small;" :id="'code'+client"><span @click="select">[Interface]<br>
+                ## {{ value.name }}<br>
+                Address = {{ network }}.{{ client }}/24<br>
+                PrivateKey = {{ value.privateKey }}<br>
+                [Peer]<br>
+                PublicKey = {{ serverkeys.publicKey }}<br>
+                AllowedIPs = {{ network }}.1/32,{{allowednets}} <br>
+                Endpoint = {{ server }}:{{ port }}
+                PersistentKeepalive = 10
+
+                </span></code>
+              </div>
+              </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="https://unpkg.com/vue@2.6.12/dist/vue.js"></script>
+  <script src="https://unpkg.com/qrcode@1.4.4/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="wireguard.js"></script>
+  <script>
+    new Vue({
+      el: "#app",
+      data() {
+        return {
+          server: "vpn.tuosito.it",
+          port: 13231,
+          network: "172.22.0",
+          startip: 2,
+          clientcount: 3,
+          allowednets: "192.168.1.0/24,192.168.0.0/24",
+          interfacename:"wg0",
+          oldconfig: [],
+          clients: {},
+          modalactive: null,
+          dlbuttonshidden:true,
+          serverkeys: wireguard.generateKeypair()
+        };
+      },
+      methods: {
+        select(event) {
+          r = document.createRange(); r.selectNode(event.target.closest("span"));
+          s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        },
+        updateclients(event) {
+          this.clients = this.makeclients;
+          var clients = this.clients;
+          this.dlbuttonshidden=false;
+
+          setTimeout(function() {
+            for (client in clients) {
+              QRCode.toCanvas(document.getElementById('canvas' + client), document.getElementById('code' + client).innerText)
+            }
+
+          });
+        },
+        downloadclients(event) {
+          for (i=this.startip; i<this.startip+this.clientcount; i++ ) {
+
+            var blob = new Blob(["[Interface]\n## "+this.clients[i].name+"\nAddress = "+this.network+"."+i+"/24\nPrivateKey = "+this.clients[i].privateKey+"\n\n[Peer]\nPublicKey =  "+this.serverkeys.publicKey+"\nAllowedIPs = "+this.network+".1/32,"+this.allowednets+"\nEndpoint = "+this.server+":"+this.port+" \nPersistentKeepalive = 10"], {
+                type: "text/plain;charset=utf-8;",
+            });
+            saveAs(blob, this.clients[i].name+".txt");
+          }
+        },
+        downloadqrcodes(event) {
+
+          for (w=this.startip; w<this.startip+this.clientcount; w++ ) {
+            var canvas = document.getElementById("canvas"+w);
+            download(canvas,this.clients[w].name);
+          }
+        }
+      },
+      computed: {
+        makeclients() {
+          var c = {};
+          for (client in [...Array(Math.floor(this.clientcount)).keys()]) {
+            finaloctet = Math.floor(client) + Math.floor(this.startip);
+            c[finaloctet] = wireguard.generateKeypair();
+            c[finaloctet].name = "Client " + finaloctet;
+          }
+          return c
+        }
+      }
+    });
+    function download(canvas,name) {
+      canvas.toBlob(function(blob) {
+          saveAs(blob,name+".png");
+      })
+    }
+  </script>
+</body>
+
+</html>
