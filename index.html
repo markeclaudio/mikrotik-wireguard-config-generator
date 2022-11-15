@@ -136,7 +136,7 @@
             var blob = new Blob(["[Interface]\n## "+this.clients[i].name+"\nAddress = "+this.network+"."+i+"/24\nPrivateKey = "+this.clients[i].privateKey+"\n\n[Peer]\nPublicKey =  "+this.serverkeys.publicKey+"\nAllowedIPs = "+this.network+".1/32,"+this.allowednets+"\nEndpoint = "+this.server+":"+this.port+" \nPersistentKeepalive = 10"], {
                 type: "text/plain;charset=utf-8;",
             });
-            saveAs(blob, this.clients[i].name+".txt");
+            saveAs(blob, this.clients[i].name+".conf");
           }
         },
         downloadqrcodes(event) {
