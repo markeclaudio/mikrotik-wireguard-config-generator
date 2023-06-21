@@ -5,7 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css">
-  <title>Wireguard Config Generator</title>
+  <title>Mikrotik Wireguard Config Generator</title>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+
 </head>
 
 <body>
@@ -13,7 +15,7 @@
     <div id="app" class="container">
       <div class="columns">
         <div class="column">
-          <h2 class="title">Wireguard Mikrotik Config Generator</h2>
+          <h2 class="title">DRM Mikrotik WG Config Generator</h2>
           <div class="buttons">
             <button class="button is-primary" @click="updateclients">Generate</button>
             <button class="button is-warning" v-if="!dlbuttonshidden" @click="downloadclients">Download Client Config</button>
@@ -58,7 +60,7 @@
                 /interface wireguard peers<br>
                 <span v-for="line in oldconfig">{{ line }}<br></span>
                   <span v-for="(value, client) in clients"><br>
-                  add allowed-address={{ network }}.{{ client }}/32 comment="{{ value.name }}" endpoint-address={{ network }}.{{ client }} interface={{interfacename}} public-key="{{ value.publicKey }}"
+                  add allowed-address={{ network }}.{{ client }}/32 comment="{{ value.name }}" endpoint-address={{ network }}.{{ client }} interface={{interfacename}} public-key="{{ value.publicKey }}"<br>
                   </span>
                 </span>
               </code>
@@ -74,13 +76,13 @@
                 <input v-model="value.name">
                 <code class="panel-block clients-code" style="font-size:small;" :id="'code'+client"><span @click="select">[Interface]<br>
                 ## {{ value.name }}<br>
-                Address = {{ network }}.{{ client }}/24<br>
+                Address = {{ network }}.{{ client }}/32<br>
                 PrivateKey = {{ value.privateKey }}<br>
                 [Peer]<br>
                 PublicKey = {{ serverkeys.publicKey }}<br>
                 AllowedIPs = {{ network }}.1/32,{{allowednets}} <br>
-                Endpoint = {{ server }}:{{ port }}
-                PersistentKeepalive = 10
+                Endpoint = {{ server }}:{{ port }}<br>
+                PersistentKeepalive = 10<br>
 
                 </span></code>
               </div>
@@ -133,7 +135,7 @@
         downloadclients(event) {
           for (i=this.startip; i<this.startip+this.clientcount; i++ ) {
 
-            var blob = new Blob(["[Interface]\n## "+this.clients[i].name+"\nAddress = "+this.network+"."+i+"/24\nPrivateKey = "+this.clients[i].privateKey+"\n\n[Peer]\nPublicKey =  "+this.serverkeys.publicKey+"\nAllowedIPs = "+this.network+".1/32,"+this.allowednets+"\nEndpoint = "+this.server+":"+this.port+" \nPersistentKeepalive = 10"], {
+            var blob = new Blob(["[Interface]\n## "+this.clients[i].name+"\nAddress = "+this.network+"."+i+"/32\nPrivateKey = "+this.clients[i].privateKey+"\n\n[Peer]\nPublicKey =  "+this.serverkeys.publicKey+"\nAllowedIPs = "+this.network+".1/32,"+this.allowednets+"\nEndpoint = "+this.server+":"+this.port+" \nPersistentKeepalive = 10"], {
                 type: "text/plain;charset=utf-8;",
             });
             saveAs(blob, this.clients[i].name+".conf");
