@@ -15,7 +15,7 @@
     <div id="app" class="container">
       <div class="columns">
         <div class="column">
-          <h2 class="title">Wireguard Mikrotik Config Generator</h2>
+          <h2 class="title">Mikrotik WG Config Generator</h2>
           <div class="buttons">
             <button class="button is-primary" @click="updateclients">Generate</button>
             <button class="button is-warning" v-if="!dlbuttonshidden" @click="downloadclients">Download Client Config</button>
@@ -35,6 +35,7 @@
               </tr>
               <tr>
                 <td>Allowed Net(s):<br> <input v-model="allowednets" size="40"></td>
+                <td>DNS:<br> <input v-model="dns" size="20"></td>
               </tr>
               <tr>
                 <td colspan="3">ServerPrivateKey:<br> <input v-model="serverkeys.privateKey" size="50"></td>
@@ -78,6 +79,7 @@
                 ## {{ value.name }}<br>
                 Address = {{ network }}.{{ client }}/32<br>
                 PrivateKey = {{ value.privateKey }}<br>
+                DNS = {{ dns }} <br>
                 [Peer]<br>
                 PublicKey = {{ serverkeys.publicKey }}<br>
                 AllowedIPs = {{ network }}.1/32,{{allowednets}} <br>
@@ -101,12 +103,13 @@
       el: "#app",
       data() {
         return {
-          server: "vpn.tuosito.it",
+          server: "vpn.yournet.it",
           port: 13231,
           network: "172.22.0",
           startip: 2,
           clientcount: 3,
           allowednets: "192.168.1.0/24,192.168.0.0/24",
+          dns:"172.22.0.1",
           interfacename:"wg0",
           oldconfig: [],
           clients: {},
@@ -155,7 +158,7 @@
           for (client in [...Array(Math.floor(this.clientcount)).keys()]) {
             finaloctet = Math.floor(client) + Math.floor(this.startip);
             c[finaloctet] = wireguard.generateKeypair();
-            c[finaloctet].name = "Client " + finaloctet;
+            c[finaloctet].name = "Client_" + finaloctet;
           }
           return c
         }
