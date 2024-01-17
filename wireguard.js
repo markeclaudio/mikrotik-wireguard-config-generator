@@ -175,9 +175,11 @@
 		generateKeypair: function() {
 			var privateKey = generatePrivateKey();
 			var publicKey = generatePublicKey(privateKey);
+			var preSharedKey = generatePresharedKey();
 			return {
 				publicKey: keyToBase64(publicKey),
-				privateKey: keyToBase64(privateKey)
+				privateKey: keyToBase64(privateKey),
+				preSharedKey: keyToBase64(preSharedKey)
 			};
 		}
 	};
