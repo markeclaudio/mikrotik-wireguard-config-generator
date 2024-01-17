@@ -43,6 +43,9 @@
               <tr>
                 <td colspan="3">ServerPublicKey:<br> <input v-model="serverkeys.publicKey" size="50"></td>
               </tr>
+              <tr>
+                <td colspan="3">PreSharedKey:<br> <input v-model="serverkeys.preSharedKey" size="50"></td>
+              </tr>
             </table>
           </article>
           <article class="panel">
@@ -83,6 +86,7 @@
                 DNS = {{ dns }} <br>
                 [Peer]<br>
                 PublicKey = {{ serverkeys.publicKey }}<br>
+                PreSharedKey = {{ value.preSharedKey }}<br>
                 AllowedIPs = {{ network }}.1/32,{{allowednets}} <br>
                 Endpoint = {{ server }}:{{ port }}<br>
                 PersistentKeepalive = 10<br>
