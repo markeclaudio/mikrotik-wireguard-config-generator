@@ -43,9 +43,6 @@
               <tr>
                 <td colspan="3">ServerPublicKey:<br> <input v-model="serverkeys.publicKey" size="50"></td>
               </tr>
-              <tr>
-                <td colspan="3">PreSharedKey:<br> <input v-model="serverkeys.preSharedKey" size="50"></td>
-              </tr>
             </table>
           </article>
           <article class="panel">
@@ -65,7 +62,7 @@
                 /interface wireguard peers<br>
                 <span v-for="line in oldconfig">{{ line }}<br></span>
                   <span v-for="(value, client) in clients"><br>
-                  add allowed-address={{ network }}.{{ client }}/32 comment="{{ value.name }}" endpoint-address={{ network }}.{{ client }} interface={{interfacename}} public-key="{{ value.publicKey }}"<br>
+                  add allowed-address={{ network }}.{{ client }}/32 comment="{{ value.name }}" endpoint-address={{ network }}.{{ client }} interface={{interfacename}} public-key="{{ value.publicKey }}" preshared-key="{{ value.preSharedKey }}"<br>
                   </span>
                 </span>
               </code>
