@@ -142,9 +142,23 @@
         downloadclients(event) {
           zip = new JSZip();
           for (i=this.startip; i<parseInt(this.startip)+parseInt(this.clientcount); i++ ) {
-            var blob = new Blob(["[Interface]\n## "+this.clients[i].name+"\nAddress = "+this.network+"."+i+"/32\nPrivateKey = "+this.clients[i].privateKey+"\nDNS = "+this.dns+"\n\n[Peer]\nPublicKey =  "+this.serverkeys.publicKey+"\nAllowedIPs = "+this.network+".1/32,"+this.allowednets+"\nEndpoint = "+this.server+":"+this.port+" \nPersistentKeepalive = 10"], {
+            var blob = new Blob(
+              [
+                "[Interface]\n",
+                "## "+this.clients[i].name+"\n",
+                "Address = "+this.network+"."+i+"/32\n",
+                "PrivateKey = "+this.clients[i].privateKey+"\n",
+                "DNS = "+this.dns+"\n\n",
+                "[Peer]\n",
+                "PublicKey = "+this.serverkeys.publicKey+"\n",
+                "AllowedIPs = "+this.network+".1/32,"+this.allowednets+"\n",
+                "Endpoint = "+this.server+":"+this.port+"\n",
+                "PersistentKeepalive = 10"
+              ], 
+              {
                 type: "text/plain;charset=utf-8;",
-            });
+              }
+            );
             zip.file(this.clients[i].name+".conf", blob);
           }
           zip.generateAsync({ type: "blob" }).then(function(content) {
